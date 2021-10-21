@@ -57,7 +57,6 @@ describe('Scenarios', () => {
 
     // Deploy Ky0xMain & Proxy
     main = await deployMainAndProxy([governance.address, treasury.address, attestor.address, pauser.address]);
-
     // Allow Tokens for Payment
     await allowTokensForPayment({
       governance: governance,
@@ -81,12 +80,13 @@ describe('Scenarios', () => {
   describe('Query Via MSB (MATCH)', function() {
     it('POST KYC (MATCH) -> QUERY KYC (PAYMENT USDC)', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [DATATYPES.KYC]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
       );
       const inputs = {
         token: usdc,
@@ -106,12 +106,13 @@ describe('Scenarios', () => {
 
     it('POST KYC (MATCH) -> QUERY KYC (PAYMENT DAI)', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [DATATYPES.KYC]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
       );
       const inputs = {
         token: dai,
@@ -130,12 +131,13 @@ describe('Scenarios', () => {
 
     it('POST KYC -> QUERY KYC (PAYMENT WETH)', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [DATATYPES.KYC]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
       );
       const inputs = {
         token: weth,
@@ -155,12 +157,21 @@ describe('Scenarios', () => {
     it('POST KYC/AML (MATCH) -> Query KYC/AML', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genData.attestation, genDataAML.attestation],
-        [genData.nonce, genDataAML.nonce],
-        [genData.ky0xID, genDataAML.ky0xID],
-        [DATATYPES.KYC, DATATYPES.AML]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
+      );
+      const tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        DATATYPES.AML,
+        1
       );
       const inputs = {
         token: usdc,
@@ -172,7 +183,7 @@ describe('Scenarios', () => {
       }
       const outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.MATCH],
-        blockNumbers: [tx.blockNumber, tx.blockNumber]
+        blockNumbers: [tx.blockNumber, tx2.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
     })
@@ -181,12 +192,13 @@ describe('Scenarios', () => {
   describe('Query Via MSB (NO_MATCH)', function() {
     it('Post KYC (FAIL) -> Query KYC (FAIL)', async () => {
       const genData = await generateData(userA, "FAIL", DATATYPES.KYC);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [DATATYPES.KYC]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
       );
       const inputs = {
         token: usdc,
@@ -207,12 +219,21 @@ describe('Scenarios', () => {
     it('Post KYC(PASS) & AML(LOW_RISK) -> Query KYC & AML', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataAML = await generateData(userA, "REVIEW_REQUIRED", DATATYPES.AML, genData.ky0xID);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genData.attestation, genDataAML.attestation],
-        [genData.nonce, genDataAML.nonce],
-        [genData.ky0xID, genDataAML.ky0xID],
-        [DATATYPES.KYC, DATATYPES.AML]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
+      );
+      const tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        DATATYPES.AML,
+        1
       );
       const inputs = {
         token: usdc,
@@ -224,7 +245,7 @@ describe('Scenarios', () => {
       }
       const outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.NO_MATCH],
-        blockNumbers: [tx.blockNumber, tx.blockNumber]
+        blockNumbers: [tx.blockNumber, tx2.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
     })
@@ -232,12 +253,21 @@ describe('Scenarios', () => {
     it('KYC NO_MATCH / AML MATCH / NO_MATCH', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genData.attestation, genDataAML.attestation],
-        [genData.nonce, genDataAML.nonce],
-        [genData.ky0xID, genDataAML.ky0xID],
-        [DATATYPES.KYC, DATATYPES.AML]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
+      );
+      const tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        DATATYPES.AML,
+        1
       );
       const inputs = {
         token: usdc,
@@ -249,7 +279,7 @@ describe('Scenarios', () => {
       }
       const outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.MATCH],
-        blockNumbers: [tx.blockNumber, tx.blockNumber]
+        blockNumbers: [tx.blockNumber, tx2.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
     })
@@ -258,12 +288,13 @@ describe('Scenarios', () => {
   describe('MSB reverts', function() {
     it('POST KYC (FAIL) -> Query KYC', async () => {
       const genData = await generateData(userA, "FAIL", DATATYPES.KYC);
-      await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [genData.dataType]
+      await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
       );
       const hashWalletSig = ethers.utils.keccak256(genData.walletSig);
       await expect(
@@ -277,12 +308,21 @@ describe('Scenarios', () => {
     it('POST KYC (PASS) / AML (LOW_RISK) -> Query KYC / AML', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataAML = await generateData(userA, "REVIEW_REQUIRED", DATATYPES.AML, genData.ky0xID);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genData.attestation, genDataAML.attestation],
-        [genData.nonce, genDataAML.nonce],
-        [genData.ky0xID, genDataAML.ky0xID],
-        [DATATYPES.KYC, DATATYPES.AML]
+      let tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
+      );
+      let tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        DATATYPES.AML,
+        1
       );
 
       const hashWalletSig = ethers.utils.keccak256(genData.walletSig);
@@ -296,12 +336,13 @@ describe('Scenarios', () => {
 
     it('Wrong Sender (ky0xID not found)', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [DATATYPES.KYC]
+      await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
       );
       const hashWalletSig = ethers.utils.keccak256(genData.walletSig);
       await expect(
@@ -314,12 +355,13 @@ describe('Scenarios', () => {
 
     it('Post AML (LOW_RISK) -> Query KYC' , async () => {
       const genData = await generateData(userA, "LOW_RISK", DATATYPES.AML);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [genData.dataType]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
       );
 
       const hashWalletSig = ethers.utils.keccak256(genData.walletSig);
@@ -335,12 +377,13 @@ describe('Scenarios', () => {
   describe('Missing DataTypes', function() {
     it('Post AML (LOW_RISK) -> Query KYC', async () => {
       const genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML);
-      const tx = await main.connect(attestor).postAttributes(
-        [genDataAML.walletSigAndAddr],
-        [genDataAML.attestation],
-        [genDataAML.nonce],
-        [genDataAML.ky0xID],
-        [genDataAML.dataType]
+      const tx = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        genDataAML.dataType,
+        1
       );
       const inputs = {
         token: usdc,
@@ -361,12 +404,13 @@ describe('Scenarios', () => {
     it('Post KYC (PASS) -> Query KYC & AML', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [genData.dataType]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
       );
       const inputs = {
         token: usdc,
@@ -388,12 +432,13 @@ describe('Scenarios', () => {
     it('Post AML (LOW_RISK) -> Query KYC & AML', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      const tx = await main.connect(attestor).postAttributes(
-        [genDataAML.walletSigAndAddr],
-        [genDataAML.attestation],
-        [genDataAML.nonce],
-        [genDataAML.ky0xID],
-        [genDataAML.dataType]
+      const tx = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        genDataAML.dataType,
+        1
       );
       const inputs = {
         token: usdc,
@@ -416,19 +461,21 @@ describe('Scenarios', () => {
     it('POST KYC -> POST WALLT_AML -> POST AML -> QUERY ALL', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      const tx1 = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [genData.dataType]
+      const tx1 = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
       );
-      const tx3 = await main.connect(attestor).postAttributes(
-        [genDataAML.walletSigAndAddr],
-        [genDataAML.attestation],
-        [genDataAML.nonce],
-        [genDataAML.ky0xID],
-        [genDataAML.dataType]
+      const tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        genDataAML.dataType,
+        1
       );
       const inputs = {
         token: usdc,
@@ -440,24 +487,41 @@ describe('Scenarios', () => {
       }
       const outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.MATCH],
-        blockNumbers: [tx1.blockNumber, tx3.blockNumber]
+        blockNumbers: [tx1.blockNumber, tx2.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
     })
   })
 
   describe('Many Users Batching', function() {
-    it('Post UserA & UserB & UserC-> Query User A -> Query User B -> QUery C', async () => {
+    it('Post UserA & UserB & UserC-> Query User A -> Query User B -> Query C', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataB = await generateData(userB, "PASS", DATATYPES.KYC);
       const genDataC = await generateData(userC, "FAIL", DATATYPES.KYC);
       const genDataD = await generateData(attestor, "PASS", DATATYPES.KYC);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataB.walletSigAndAddr, genDataC.walletSigAndAddr],
-        [genData.attestation, genDataB.attestation, genDataC.attestation],
-        [genData.nonce, genDataB.nonce, genDataC.nonce],
-        [genData.ky0xID, genDataB.ky0xID, genDataC.ky0xID],
-        [genData.dataType, genDataB.dataType, genDataC.dataType]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
+      );
+      const tx2 = await main.connect(attestor).postAttribute(
+        genDataB.walletSigAndAddr,
+        genDataB.attestation,
+        genDataB.nonce,
+        genDataB.ky0xID,
+        genDataB.dataType,
+        1
+      );
+      const tx3 = await main.connect(attestor).postAttribute(
+        genDataC.walletSigAndAddr,
+        genDataC.attestation,
+        genDataC.nonce,
+        genDataC.ky0xID,
+        genDataC.dataType,
+        1
       );
       const inputsA = {
         token: usdc,
@@ -482,7 +546,7 @@ describe('Scenarios', () => {
       }
       const outputsB = {
         matches: [MATCH_STATUS.MATCH],
-        blockNumbers: [tx.blockNumber]
+        blockNumbers: [tx2.blockNumber]
       }
       await callMSBAndAssert(inputsB, outputsB);
       const inputsC = {
@@ -495,7 +559,7 @@ describe('Scenarios', () => {
       }
       const outputsC = {
         matches: [MATCH_STATUS.NO_MATCH],
-        blockNumbers: [tx.blockNumber]
+        blockNumbers: [tx3.blockNumber]
       }
       await callMSBAndAssert(inputsC, outputsC);
       const inputsD = {
@@ -519,12 +583,21 @@ describe('Scenarios', () => {
     it('Post WalletA -> Post WalletB -> Query WalletA -> Query WalletB', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
       const genDataB = await generateData(userB, "PASS", DATATYPES.KYC, genData.ky0xID);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataB.walletSigAndAddr],
-        [genData.attestation, genDataB.attestation],
-        [genData.nonce, genDataB.nonce],
-        [genData.ky0xID, genDataB.ky0xID],
-        [genData.dataType, genDataB.dataType]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
+      );
+      const tx2 = await main.connect(attestor).postAttribute(
+        genDataB.walletSigAndAddr,
+        genDataB.attestation,
+        genDataB.nonce,
+        genDataB.ky0xID,
+        genDataB.dataType,
+        1
       );
       const inputsA = {
         token: usdc,
@@ -548,7 +621,7 @@ describe('Scenarios', () => {
       }
       const outputsB = {
         matches: [MATCH_STATUS.MATCH],
-        blockNumbers: [tx.blockNumber]
+        blockNumbers: [tx2.blockNumber]
       }
       await callMSBAndAssert(inputsB, outputsB);
 
@@ -574,12 +647,13 @@ describe('Scenarios', () => {
   describe('Continuous Monitoring - Data Update', function() {
     it('[Re-using Nonce] Post KYC (PASS) -> QUERY KYC -> UPDATE KYC (PASS) -> QUERY KYC', async () => {
       let genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      let tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [genData.dataType]
+      let tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
       );
       let inputs = {
         token: usdc,
@@ -597,12 +671,13 @@ describe('Scenarios', () => {
 
       // Update to FAIL
       const genDataNew = await generateData(userA, "FAIL", DATATYPES.KYC, genData.ky0xID, genData.nonce);
-      tx = await main.connect(attestor).postAttributes(
-        [genDataNew.walletSigAndAddr],
-        [genDataNew.attestation],
-        [genDataNew.nonce],
-        [genDataNew.ky0xID],
-        [genDataNew.dataType]
+      tx = await main.connect(attestor).postAttribute(
+        genDataNew.walletSigAndAddr,
+        genDataNew.attestation,
+        genDataNew.nonce,
+        genDataNew.ky0xID,
+        genDataNew.dataType,
+        2
       );
       inputs = {
         token: usdc,
@@ -621,12 +696,13 @@ describe('Scenarios', () => {
 
     it('[New Nonce] Post KYC (PASS) -> QUERY KYC -> UPDATE KYC (PASS) -> QUERY KYC', async () => {
       let genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      let tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [genData.dataType]
+      let tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
       );
       let inputs = {
         token: usdc,
@@ -644,12 +720,13 @@ describe('Scenarios', () => {
 
       // Update to FAIL
       const genDataNew = await generateData(userA, "FAIL", DATATYPES.KYC, genData.ky0xID, genData.nonce);
-      tx = await main.connect(attestor).postAttributes(
-        [genDataNew.walletSigAndAddr],
-        [genDataNew.attestation],
-        [genDataNew.nonce],
-        [genDataNew.ky0xID],
-        [genDataNew.dataType]
+      tx = await main.connect(attestor).postAttribute(
+        genDataNew.walletSigAndAddr,
+        genDataNew.attestation,
+        genDataNew.nonce,
+        genDataNew.ky0xID,
+        genDataNew.dataType,
+        2
       );
       inputs = {
         token: usdc,
@@ -669,12 +746,21 @@ describe('Scenarios', () => {
     it('Post KYC (PASS) & AML (LOW_RISK) -> QUERY KYC/AML -> UPDATE AML (LOW_RISK) -> QUERY KYC/AML', async () => {
       let genData = await generateData(userA, "PASS", DATATYPES.KYC);
       let genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      let tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genData.attestation, genDataAML.attestation],
-        [genData.nonce, genDataAML.nonce],
-        [genData.ky0xID, genDataAML.ky0xID],
-        [DATATYPES.KYC, DATATYPES.AML]
+      let tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
+      );
+      let tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        DATATYPES.AML,
+        1
       );
       let inputs = {
         token: usdc,
@@ -686,18 +772,19 @@ describe('Scenarios', () => {
       }
       let outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.MATCH],
-        blockNumbers: [tx.blockNumber, tx.blockNumber]
+        blockNumbers: [tx.blockNumber, tx2.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
 
       // Update AML to HIGH_RISK
       const genDataNew = await generateData(userA, "HIGH_RISK", DATATYPES.AML, genData.ky0xID, genData.nonce);
-      const tx2 = await main.connect(attestor).postAttributes(
-        [genDataNew.walletSigAndAddr],
-        [genDataNew.attestation],
-        [genDataNew.nonce],
-        [genDataNew.ky0xID],
-        [genDataNew.dataType]
+      const tx3 = await main.connect(attestor).postAttribute(
+        genDataNew.walletSigAndAddr,
+        genDataNew.attestation,
+        genDataNew.nonce,
+        genDataNew.ky0xID,
+        genDataNew.dataType,
+        2
       );
       inputs = {
         token: usdc,
@@ -709,7 +796,7 @@ describe('Scenarios', () => {
       }
       outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.NO_MATCH],
-        blockNumbers: [tx.blockNumber, tx2.blockNumber]
+        blockNumbers: [tx.blockNumber, tx3.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
     })
@@ -719,12 +806,21 @@ describe('Scenarios', () => {
     it('POST KYC/AML -> Query KYC/AML -> Update Smart Contract -> Query KYC/AML', async () => {
       let genData = await generateData(userA, "PASS", DATATYPES.KYC);
       let genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      let tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genData.attestation, genDataAML.attestation],
-        [genData.nonce, genDataAML.nonce],
-        [genData.ky0xID, genDataAML.ky0xID],
-        [DATATYPES.KYC, DATATYPES.AML]
+      let tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
+      );
+      let tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        DATATYPES.AML,
+        1
       );
       let inputs = {
         token: usdc,
@@ -736,7 +832,7 @@ describe('Scenarios', () => {
       }
       let outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.MATCH],
-        blockNumbers: [tx.blockNumber, tx.blockNumber]
+        blockNumbers: [tx.blockNumber, tx2.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
       const Ky0xMainV2 = await ethers.getContractFactory('Ky0xMainV2');
@@ -750,12 +846,21 @@ describe('Scenarios', () => {
     it('POST KYC/AML Update Smart Contract -> Query KYC/AML -> Post KYC/AML -> Query KYC/AML', async () => {
       let genData = await generateData(userA, "PASS", DATATYPES.KYC);
       let genDataAML = await generateData(userA, "LOW_RISK", DATATYPES.AML, genData.ky0xID);
-      let tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genData.attestation, genDataAML.attestation],
-        [genData.nonce, genDataAML.nonce],
-        [genData.ky0xID, genDataAML.ky0xID],
-        [DATATYPES.KYC, DATATYPES.AML]
+      let tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
+      );
+      let tx2 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        DATATYPES.AML,
+        1
       );
       let inputs = {
         token: usdc,
@@ -767,7 +872,7 @@ describe('Scenarios', () => {
       }
       let outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.MATCH],
-        blockNumbers: [tx.blockNumber, tx.blockNumber]
+        blockNumbers: [tx.blockNumber, tx2.blockNumber]
       }
       const Ky0xMainV2 = await ethers.getContractFactory('Ky0xMainV2');
       // Hack because `upgradeMain` bug - cannot specify a diff account than `deployer`
@@ -777,12 +882,21 @@ describe('Scenarios', () => {
       await callMSBAndAssert(inputs, outputs);
       genDataAML = await generateData(userA, "HIGH_RISK", DATATYPES.AML, genData.ky0xID);
       let genDataB = await generateData(userB, "PASS", DATATYPES.KYC);
-      let tx2 = await main.connect(attestor).postAttributes(
-        [genDataB.walletSigAndAddr, genDataAML.walletSigAndAddr],
-        [genDataB.attestation, genDataAML.attestation],
-        [genDataB.nonce, genDataAML.nonce],
-        [genDataB.ky0xID, genDataAML.ky0xID],
-        [genDataB.dataType, genDataAML.dataType]
+      let tx3 = await main.connect(attestor).postAttribute(
+        genDataB.walletSigAndAddr,
+        genDataB.attestation,
+        genDataB.nonce,
+        genDataB.ky0xID,
+        genDataB.dataType,
+        1
+      );
+      let tx4 = await main.connect(attestor).postAttribute(
+        genDataAML.walletSigAndAddr,
+        genDataAML.attestation,
+        genDataAML.nonce,
+        genDataAML.ky0xID,
+        genDataAML.dataType,
+        2
       );
       // Query userA Update (AML become HIGH_RISK)
       inputs = {
@@ -795,7 +909,7 @@ describe('Scenarios', () => {
       }
       outputs = {
         matches: [MATCH_STATUS.MATCH, MATCH_STATUS.NO_MATCH],
-        blockNumbers: [tx.blockNumber, tx2.blockNumber]
+        blockNumbers: [tx.blockNumber, tx4.blockNumber]
       }
       await callMSBAndAssert(inputs, outputs);
       // Query userB new attestation
@@ -809,7 +923,7 @@ describe('Scenarios', () => {
       }
       outputs = {
         matches: [MATCH_STATUS.MATCH],
-        blockNumbers: [tx2.blockNumber]
+        blockNumbers: [tx4.blockNumber]
       }
     })
   })
@@ -817,12 +931,13 @@ describe('Scenarios', () => {
   describe('Change of Price Feed', function() {
     it('Post -> Query -> Change Price -> Query', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [genData.dataType]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        genData.dataType,
+        1
       );
       let inputs = {
         token: usdc,
@@ -872,12 +987,13 @@ describe('Scenarios', () => {
   describe('Query Via callKy0x', function() {
     it('POST KYC (MATCH) -> QUERY KYC (PAYMENT USDC)', async () => {
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      const tx = await main.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [DATATYPES.KYC]
+      const tx = await main.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
       );
       const hashWalletSig = ethers.utils.keccak256(genData.walletSig);
       const initialBalanceMSB = await usdc.balanceOf(msb.address);

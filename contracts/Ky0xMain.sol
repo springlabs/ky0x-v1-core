@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 //
 // © 2021 Springcoin, Inc.   Any computer software, smart contract, or application (including upgrades and replacements)
-// (collectively, “Software”) contained herein are owned by Springcoin, Inc. or its affiliates (“Company”),
-// shall remain proprietary to Company, and shall in all events remain the exclusive property of Company.  Nothing
-// contained in this Software nor the provision of its source code shall confer the right to use, reproduce,
-// copy, modify, create derivative works, or make non-production use of  any of such Software.  This Software is
-// not released or otherwise available under an Open Source license, nor is it open source software.
-// All use of the Software or its source code is subject to the previously accepted Terms of Use. Any use of the
-// Software or its source code inconsistent with the Terms of Use is strictly prohibited.
-
-// Customizations, updates or corrections of Software, if any, are the property of, and all rights thereto, are
-// owned by Company. Any viewers of this Software also acknowledge that such Software, updates, or corrections
-// are a trade secret of Company, are valuable and confidential to Company.
-
+// (collectively, “Software”) contained herein are owned by Springcoin, Inc. or its affiliates (“Company”), shall remain
+// proprietary to Company, and shall in all events remain the exclusive property of Company.  Nothing contained in this
+// Software nor the provision of its source code shall confer the right to use, reproduce, copy, modify, create
+// derivative works, or make non-production use of  any of such Software.  This Software is not released or otherwise
+// available under an Open Source license, nor is it open source software. All use of the Software or its source code is
+// subject to the previously accepted Terms of Use. Any use of the Software or its source code inconsistent with the
+// Terms of Use is strictly prohibited.
+//
+// Customizations, updates or corrections of Software, if any, are the property of, and all rights thereto, are owned by
+// Company.  Any viewers of this Software also acknowledge that such Software, updates, or corrections are a trade
+// secret of Company, are valuable and confidential to Company.
+//
 // Removal or alteration of this copyright notice is strictly prohibited.
 
 pragma solidity =0.8.2;
@@ -69,51 +69,25 @@ contract Ky0xMain is AccessControl, UUPSUpgradeable, Ky0xStore, Ky0xGovernance {
     /**
       * @notice Never attest to any sensitive data
       * @dev Post obfuscated attestations about an individual. This data can only be unlocked by the individual itself.
-      * @param _hashWalletSigAndAddrs List[keccak256(Keccak256(WalletSig) | WalletAddress))]
-      * @param _attestations list of attestations about an individual
-      * @param _nonces list of unique nonces auto-generated during on-boarding
-      * @param _kIDs list of identifiers associated to `WalletAddress`
-      * @param _dataTypes list of attestation dataTypes (ex: ID_STATUS, AML_STATUS, WALLET_STATUS)
-      */
-    function postAttributes(
-        bytes32[] calldata _hashWalletSigAndAddrs,
-        bytes32[] calldata _attestations,
-        bytes32[] calldata _nonces,
-        bytes32[] calldata _kIDs,
-        uint256[] calldata _dataTypes
-    )  public virtual
-    {
-        require(paused == false, "paused");
-        require(hasRole(ATTESTOR_ROLE, msg.sender), "attestor only");
-        require(_attestations.length > 0 && _attestations.length < 10, "batch size should be between 1 and 9");
-        require(
-            (_hashWalletSigAndAddrs.length == _attestations.length)
-            && (_hashWalletSigAndAddrs.length == _nonces.length)
-            && (_hashWalletSigAndAddrs.length == _kIDs.length)
-            && (_hashWalletSigAndAddrs.length == _dataTypes.length),
-            "length not equal"
-        );
-
-        for (uint256 i = 0; i < _attestations.length; i++) {
-            _saveWalletInfo(_hashWalletSigAndAddrs[i], _attestations[i], _nonces[i], _kIDs[i], _dataTypes[i]);
-        }
-    }
-
-    /**
-      * @dev Save the attestation in storage in `walletInfoMap`.
       * @param _hashWalletSigAndAddr keccak256(Keccak256(WalletSig) | WalletAddress))
-      * @param _attestation attestation about an individual
+      * @param _attestation attestations about an individual
       * @param _nonce unique nonces auto-generated during on-boarding
-      * @param _kID identifier associated to `WalletAddress`
-      * @param _dataType attestation dataType (ex: ID_STATUS, AML_STATUS, WALLET_STATUS)
+      * @param _kID identifiers associated to `WalletAddress`
+      * @param _dataType attestation dataTypes (ex: ID_STATUS, AML_STATUS, WALLET_STATUS)
+      * @param _nonceCounter incremental counter to obfuscate noncesigKD
+
       */
-    function _saveWalletInfo(
+    function postAttribute(
         bytes32 _hashWalletSigAndAddr,
         bytes32 _attestation,
         bytes32 _nonce,
         bytes32 _kID,
-        uint256 _dataType
-    ) internal {
+        uint256 _dataType,
+        uint256 _nonceCounter
+    )  public virtual
+    {
+        require(paused == false, "paused");
+        require(hasRole(ATTESTOR_ROLE, msg.sender), "attestor only");
         require(dataTypesMap[_dataType], "datatype not enabled");
         require(
             _nonce != bytes32(0)
@@ -122,11 +96,16 @@ contract Ky0xMain is AccessControl, UUPSUpgradeable, Ky0xStore, Ky0xGovernance {
             && _kID != bytes32(0),
             "cannot be 0"
         );
+        require(
+            _nonceCounter == walletInfoMap[_hashWalletSigAndAddr][_dataType].nonceCounter + 1,
+            "invalid nonceCounter"
+        );
         walletInfoMap[_hashWalletSigAndAddr][_dataType] = WalletInfo({
             attestation: _attestation,
             nonce: _nonce,
             kID: _kID,
-            blockNumber: block.number
+            blockNumber: block.number,
+            nonceCounter: _nonceCounter
         });
     }
 
@@ -141,19 +120,23 @@ contract Ky0xMain is AccessControl, UUPSUpgradeable, Ky0xStore, Ky0xGovernance {
         public
         view
         virtual
-        returns (uint8[] memory, bytes32[] memory)
+        returns (uint8[] memory, bytes32[] memory, uint256[] memory)
     {
         bytes32[] memory nonces = new bytes32[](_dataTypes.length);
         uint8[] memory errors = new uint8[](_dataTypes.length);
+        uint256[] memory nonceCounters = new uint256[](_dataTypes.length);
+
         bytes32 hashWalletSigAndAddr = keccak256(abi.encode(_hashWalletSig, msg.sender));
         bytes32 nonce;
+        uint256 nonceCounter;
 
         for (uint256 i = 0; i < _dataTypes.length; i++) {
-            (,nonce,,) = _getWalletInfo(hashWalletSigAndAddr, _dataTypes[i]);
+            (,nonce,,,nonceCounter) = _getWalletInfo(hashWalletSigAndAddr, _dataTypes[i]);
             nonces[i] = nonce;
             errors[i] = nonce != bytes32(0) ? uint8(Error.NO_ERROR) : uint8(Error.NOT_FOUND);
+            nonceCounters[i] = nonceCounter;
         }
-        return (errors, nonces);
+        return (errors, nonces, nonceCounters);
     }
 
     /**
@@ -174,7 +157,7 @@ contract Ky0xMain is AccessControl, UUPSUpgradeable, Ky0xStore, Ky0xGovernance {
         uint256 blockNumber;
 
         for (uint256 i = 0; i < _dataTypes.length; i++) {
-            (,,,blockNumber) = _getWalletInfo(hashWalletSigAndAddr, _dataTypes[i]);
+            (,,,blockNumber,) = _getWalletInfo(hashWalletSigAndAddr, _dataTypes[i]);
             blockNumbers[i] = blockNumber;
         }
         return (blockNumbers);
@@ -244,11 +227,11 @@ contract Ky0xMain is AccessControl, UUPSUpgradeable, Ky0xStore, Ky0xGovernance {
     function _getWalletInfo(bytes32 _hashWalletSigAndAddr, uint256 _dataType)
         internal
         view
-        returns (bytes32, bytes32, bytes32, uint256)
+        returns (bytes32, bytes32, bytes32, uint256, uint256)
     {
         require(dataTypesMap[_dataType], "datatype not enabled");
         WalletInfo storage w = walletInfoMap[_hashWalletSigAndAddr][_dataType];
-        return (w.attestation, w.nonce, w.kID, w.blockNumber);
+        return (w.attestation, w.nonce, w.kID, w.blockNumber, w.nonceCounter);
     }
 
 
