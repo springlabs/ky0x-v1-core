@@ -82,8 +82,8 @@ async function generateData(user, attributeRawValue, dataType, kID = '', _nonce 
 
   const nonceSigKD = ethers.utils.keccak256(
     ethers.utils.defaultAbiCoder.encode(
-      ["uint256", "bytes32"],
-      [dataType, ethers.utils.keccak256(nonceSig)]
+      ["uint256", "uint256", "bytes32"],
+      [1, dataType, ethers.utils.keccak256(nonceSig)]
     )
   );
   const walletSigAndAddr = ethers.utils.keccak256(

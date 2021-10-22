@@ -71,6 +71,11 @@
         "internalType": "bytes32[]",
         "name": "",
         "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "view",
@@ -79,32 +84,37 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32[]",
+        "internalType": "bytes32",
         "name": "_hashWalletSigAndAddrs",
-        "type": "bytes32[]"
+        "type": "bytes32"
       },
       {
-        "internalType": "bytes32[]",
+        "internalType": "bytes32",
         "name": "_attestations",
-        "type": "bytes32[]"
+        "type": "bytes32"
       },
       {
-        "internalType": "bytes32[]",
+        "internalType": "bytes32",
         "name": "_nonces",
-        "type": "bytes32[]"
+        "type": "bytes32"
       },
       {
-        "internalType": "bytes32[]",
+        "internalType": "bytes32",
         "name": "_kIDs",
-        "type": "bytes32[]"
+        "type": "bytes32"
       },
       {
-        "internalType": "uint256[]",
+        "internalType": "uint256",
         "name": "_dataTypes",
-        "type": "uint256[]"
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_nonceCounter",
+        "type": "uint256"
       }
     ],
-    "name": "postAttributes",
+    "name": "postAttribute",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

@@ -400,12 +400,13 @@ describe('Ky0xGovernance', () => {
         }]
       })
       const genData = await generateData(userA, "PASS", DATATYPES.KYC);
-      const postTx = await oldMain.connect(attestor).postAttributes(
-        [genData.walletSigAndAddr],
-        [genData.attestation],
-        [genData.nonce],
-        [genData.ky0xID],
-        [DATATYPES.KYC]
+      const postTx = await oldMain.connect(attestor).postAttribute(
+        genData.walletSigAndAddr,
+        genData.attestation,
+        genData.nonce,
+        genData.ky0xID,
+        DATATYPES.KYC,
+        1
       );
       const inputs = {
         token: usdc,
